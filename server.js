@@ -103,7 +103,14 @@ app.get('/api/cuenta/:dni', async (req, res) => {
     });
   }
 });
+// ... (todo tu código anterior se queda igual hasta aquí)
 
-app.listen(puerto, () => {
-  console.log(`Abrí http://localhost:${puerto}`);
-});
+// ✅ EXPORTAR la app para que Vercel pueda usarla
+module.exports = app;
+
+// ✅ Solo iniciar el servidor localmente si NO estamos en Vercel (producción)
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(puerto, () => {
+    console.log(`Servidor corriendo en http://localhost:${puerto}`);
+  });
+}
