@@ -1,15 +1,529 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Cuenta ISPI</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mi Cuenta ISPI</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
 
-    <h1>MI CUENTA ISPI</h1>
-    <p>Consulta tu estado de cuenta</p>
+<div id="app">
+
+  <!-- LOGIN -->
+  <section class="screen active" id="s-login">
+
+    <div class="deco">
+      <span class="d tl-o"></span>
+      <span class="d tl-y"></span>
+      <span class="d tr-b"></span>
+      <span class="d tr-g"></span>
+      <span class="d bl-g"></span>
+      <span class="d bc-b"></span>
+      <span class="d br-r"></span>
+    </div>
+
+    <div class="login-space"></div>
+
+    <div class="logo">
+      <span class="brush">@</span>
+
+      <span class="lcol">
+        <span class="lbox">ISPI 4019</span>
+        <span class="lsub">SAN JUAN BAUTISTA</span>
+      </span>
+    </div>
+
+    <h1>¡Bienvenido!</h1>
+
+    <p class="sub">
+      Ingresá para consultar tu estado de cuenta<br>
+      y tus pagos de forma rápida y segura.
+    </p>
+
+    <form class="card" id="loginForm">
+
+      <div class="avatar">
+        👤
+      </div>
+
+      <h2 class="login-title">Consultar cuenta</h2>
+
+      <div class="field">
+        <label for="user">Usuario o DNI</label>
+
+        <div class="inp">
+          👤
+          <input
+            id="user"
+            type="text"
+            inputmode="numeric"
+            maxlength="8"
+            placeholder="Ej: 12345678"
+          >
+        </div>
+      </div>
+
+      <button class="btn btn-n" type="submit">
+        Consultar cuenta →
+      </button>
+
+      <p id="mensaje"></p>
+
+    </form>
+
+    <div class="foot">
+      ℹ️
+      <span>
+        Ingresá tu DNI para consultar tu estado de cuenta.
+      </span>
+    </div>
+
+  </section>
+
+
+  <!-- INICIO -->
+  <section class="screen" id="s-inicio">
+
+    <div class="deco">
+      <span class="d tl-y"></span>
+      <span class="d tr-b"></span>
+    </div>
+
+    <div class="top">
+
+      <button class="iconbtn" onclick="toast('Menú')">
+        ☰
+      </button>
+
+      <div class="logo small-logo">
+        <span class="brush small-brush">@</span>
+
+        <span class="lcol">
+          <span class="lbox small-box">ISPI 4019</span>
+          <span class="lsub small-sub">SAN JUAN BAUTISTA</span>
+        </span>
+      </div>
+
+      <button class="iconbtn" onclick="toast('No hay nuevas notificaciones')">
+        🔔
+      </button>
+
+    </div>
+
+    <h1 class="hello">¡Hola!</h1>
+
+    <p class="sub left">
+      Bienvenida al sistema de Estado de Cuenta
+    </p>
+
+    <div class="grid">
+
+      <div class="stat blue">
+        <div class="ic azul">💳</div>
+
+        <small>Saldo total</small>
+
+        <b id="saldoInicio">$ 0</b>
+
+        <span class="link" data-go="estado">
+          Ver detalle ›
+        </span>
+      </div>
+
+
+      <div class="stat green">
+        <div class="ic verde">📅</div>
+
+        <small>Próximo vencimiento</small>
+
+        <b id="proximoVencimiento">-</b>
+
+        <span class="link" data-go="estado">
+          Ver cuotas ›
+        </span>
+      </div>
+
+
+      <div class="stat orange">
+        <div class="ic naranja">💳</div>
+
+        <small>Pagos realizados</small>
+
+        <b id="cantidadPagos">0</b>
+
+        <span class="link" data-go="historial">
+          Ver historial ›
+        </span>
+      </div>
+
+
+      <div class="stat red">
+        <div class="ic rojo">⚠️</div>
+
+        <small>Cuotas pendientes</small>
+
+        <b id="cantidadPendientes">0</b>
+
+        <span class="link" data-go="estado">
+          Ver cuotas ›
+        </span>
+      </div>
+
+    </div>
+
+
+    <div class="banner" id="bannerInicio">
+      📄
+      <b>Estado de cuenta</b>
+      <br>
+      Consultá tus cuotas y pagos.
+      <br>
+
+      <button class="btn banner-btn" data-go="estado">
+        Ver estado de cuenta ›
+      </button>
+    </div>
+
+
+    <div class="card">
+
+      <div class="section-title">
+        <b>Últimos movimientos</b>
+
+        <span class="link" data-go="historial">
+          Ver todos
+        </span>
+      </div>
+
+      <div id="movimientosInicio">
+        <p class="empty">
+          No hay movimientos para mostrar.
+        </p>
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ESTADO DE CUENTA -->
+  <section class="screen" id="s-estado">
+
+    <div class="deco">
+      <span class="d tl-y"></span>
+      <span class="d tr-b"></span>
+    </div>
+
+    <div class="top">
+
+      <button class="iconbtn">
+        ☰
+      </button>
+
+      <div class="logo small-logo">
+        <span class="brush small-brush">@</span>
+
+        <span class="lcol">
+          <span class="lbox small-box">ISPI 4019</span>
+          <span class="lsub small-sub">SAN JUAN BAUTISTA</span>
+        </span>
+      </div>
+
+      <button class="iconbtn">
+        🔔
+      </button>
+
+    </div>
+
+    <h1>Estado de cuenta</h1>
+
+    <p class="sub">
+      Detalle de cuotas
+    </p>
+
+
+    <div class="card student-card">
+
+      <span class="student-icon">
+        👤
+      </span>
+
+      <div>
+        <b id="nombreAlumno">-</b>
+        <br>
+        <span id="datosAlumno">
+          Estudiante
+        </span>
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <div id="listaCuotas">
+        <p class="empty">
+          No hay cuotas cargadas.
+        </p>
+      </div>
+
+    </div>
+
+
+    <div class="sbar">
+
+      <b>Saldo total</b>
+
+      <b id="saldo">
+        $ 0
+      </b>
+
+    </div>
+
+  </section>
+
+
+  <!-- PAGOS -->
+  <section class="screen" id="s-pagos">
+
+    <div class="deco">
+      <span class="d tl-y"></span>
+      <span class="d tr-b"></span>
+    </div>
+
+    <div class="top">
+
+      <button class="iconbtn">
+        ☰
+      </button>
+
+      <div class="logo small-logo">
+        <span class="brush small-brush">@</span>
+
+        <span class="lcol">
+          <span class="lbox small-box">ISPI 4019</span>
+          <span class="lsub small-sub">SAN JUAN BAUTISTA</span>
+        </span>
+      </div>
+
+      <button class="iconbtn">
+        🔔
+      </button>
+
+    </div>
+
+    <h1>Pagos</h1>
+
+    <p class="sub">
+      Cuotas pendientes
+    </p>
+
+    <div class="card">
+
+      <b class="card-title">
+        Cuotas pendientes
+      </b>
+
+      <div id="listaPagos">
+        <p class="empty">
+          No hay cuotas pendientes.
+        </p>
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- HISTORIAL -->
+  <section class="screen" id="s-historial">
+
+    <div class="deco">
+      <span class="d tl-y"></span>
+      <span class="d tr-b"></span>
+    </div>
+
+    <div class="top">
+
+      <button class="iconbtn">
+        ☰
+      </button>
+
+      <div class="logo small-logo">
+        <span class="brush small-brush">@</span>
+
+        <span class="lcol">
+          <span class="lbox small-box">ISPI 4019</span>
+          <span class="lsub small-sub">SAN JUAN BAUTISTA</span>
+        </span>
+      </div>
+
+      <button class="iconbtn">
+        🔔
+      </button>
+
+    </div>
+
+    <h1>Historial de pagos</h1>
+
+    <p class="sub">
+      Tus pagos realizados
+    </p>
+
+
+    <div class="card">
+
+      <div id="historialPagos">
+
+        <p class="empty">
+          No hay pagos realizados.
+        </p>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- PERFIL -->
+  <section class="screen" id="s-perfil">
+
+    <div class="deco">
+      <span class="d tl-y"></span>
+      <span class="d tr-b"></span>
+    </div>
+
+    <div class="top">
+
+      <button class="iconbtn">
+        ☰
+      </button>
+
+      <div class="logo small-logo">
+        <span class="brush small-brush">@</span>
+
+        <span class="lcol">
+          <span class="lbox small-box">ISPI 4019</span>
+          <span class="lsub small-sub">SAN JUAN BAUTISTA</span>
+        </span>
+      </div>
+
+      <button class="iconbtn">
+        🔔
+      </button>
+
+    </div>
+
+
+    <div class="card profile-card">
+
+      <div class="profile-avatar">
+        👤
+      </div>
+
+      <div>
+
+        <b id="perfilNombre">
+          -
+        </b>
+
+        <br>
+
+        <span id="perfilDatos">
+          Estudiante
+        </span>
+
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <div class="fila">
+        🎓
+        <b>Carrera</b>
+        <span class="der" id="perfilCarrera">
+          -
+        </span>
+      </div>
+
+      <div class="fila">
+        📚
+        <b>Curso</b>
+        <span class="der" id="perfilCurso">
+          -
+        </span>
+      </div>
+
+      <div class="fila">
+        🪪
+        <b>DNI</b>
+        <span class="der" id="perfilDni">
+          -
+        </span>
+      </div>
+
+    </div>
+
+
+    <!-- BOTÓN SALIR -->
+    <div
+      class="card salir"
+      onclick="salir()"
+    >
+      🚪
+      <b>Cerrar sesión</b>
+      <span class="der">›</span>
+    </div>
+
+
+    <p class="version">
+      Versión 1.0.0
+    </p>
+
+  </section>
+
+</div>
+
+
+<!-- NAVEGACIÓN -->
+<nav id="nav">
+
+  <button class="tab active" data-tab="inicio">
+    🏠
+    <span>Inicio</span>
+  </button>
+
+  <button class="tab" data-tab="estado">
+    📄
+    <span>Estado</span>
+  </button>
+
+  <button class="tab" data-tab="pagos">
+    💳
+    <span>Pagos</span>
+  </button>
+
+  <button class="tab" data-tab="historial">
+    🕘
+    <span>Historial</span>
+  </button>
+
+  <button class="tab" data-tab="perfil">
+    👤
+    <span>Perfil</span>
+  </button>
+
+</nav>
+
+
+<div id="toast"></div>
+
+<script src="app.js"></script>
 
 </body>
 </html>
