@@ -1,7 +1,4 @@
-require('dotenv').config();
-
-// En algunas redes Windows, Node intenta primero una ruta IPv6 que no llega
-// correctamente a Supabase. Priorizamos IPv4 para evitar errores de fetch.
+// Forzar IPv4 para evitar problemas de conexión con Supabase en algunas redes
 require('dns').setDefaultResultOrder('ipv4first');
 
 const path = require('path');
@@ -9,40 +6,34 @@ const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
-const puerto = 3000;
+const puerto = process.env.PORT || 3000;
 
 const esperar = (milisegundos) =>
   new Promise((resolver) => setTimeout(resolver, milisegundos));
 
-// Algunas conexiones de red interrumpen ocasionalmente el primer intento HTTPS.
-// Supabase recibe el mismo pedido hasta tres veces antes de informar un error.
 async function fetchConReintento(url, opciones) {
   let ultimoError;
-
   for (let intento = 1; intento <= 3; intento += 1) {
     try {
       return await fetch(url, opciones);
     } catch (error) {
       ultimoError = error;
-
       if (intento < 3) {
         await esperar(500 * intento);
       }
     }
   }
-
   throw ultimoError;
 }
 
+// Verificar variables de entorno (Sin lanzar error fatal para poder depurar)
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_PUBLISHABLE_KEY) {
-  throw new Error(
-    'Faltan SUPABASE_URL o SUPABASE_PUBLISHABLE_KEY en las variables de entorno'
-  );
+  console.error('⚠️ ADVERTENCIA: Faltan variables de entorno de Supabase en Vercel.');
 }
 
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_PUBLISHABLE_KEY,
+  process.env.SUPABASE_URL || '',
+  process.env.SUPABASE_PUBLISHABLE_KEY || '',
   {
     global: {
       fetch: fetchConReintento
@@ -51,6 +42,17 @@ const supabase = createClient(
 );
 
 app.use(express.static(path.join(__dirname, 'public')));
+
+// ✅ RUTA DE PRUEBA: Para verificar que el servidor y las variables funcionan
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    variablesCargadas: {
+      url: !!process.env.SUPABASE_URL,
+      key: !!process.env.SUPABASE_PUBLISHABLE_KEY
+    }
+  });
+});
 
 app.get('/api/cuenta/:dni', async (req, res) => {
   const dni = String(req.params.dni || '').trim();
@@ -68,9 +70,7 @@ app.get('/api/cuenta/:dni', async (req, res) => {
       .eq('dni', dni)
       .maybeSingle();
 
-    if (errorAlumno) {
-      throw errorAlumno;
-    }
+    if (errorAlumno) throw errorAlumno;
 
     if (!alumno) {
       return res.status(404).json({
@@ -84,30 +84,21 @@ app.get('/api/cuenta/:dni', async (req, res) => {
       .eq('alumno_id', alumno.id)
       .order('vencimiento', { ascending: true });
 
-    if (errorCuotas) {
-      throw errorCuotas;
-    }
+    if (errorCuotas) throw errorCuotas;
 
-    return res.json({
-      alumno,
-      cuotas: cuotas || []
-    });
+    return res.json({ alumno, cuotas: cuotas || [] });
   } catch (error) {
-    console.error(error);
-    if (error.cause) {
-      console.error('Causa de conexión:', error.cause);
-    }
-
+    console.error('Error en /api/cuenta:', error);
     return res.status(500).json({
       error: error.message || 'No se pudo consultar la cuenta.'
     });
   }
 });
 
-// ✅ EXPORTAR la app para que Vercel pueda usarla (OBLIGATORIO)
+// ✅ EXPORTAR la app para que Vercel la use como Serverless Function
 module.exports = app;
 
-// ✅ Solo iniciar el servidor localmente si NO estamos en Vercel (producción)
+// ✅ Solo escuchar en puerto local si NO estamos en producción (Vercel)
 if (process.env.NODE_ENV !== 'production') {
   app.listen(puerto, () => {
     console.log(`Servidor corriendo en http://localhost:${puerto}`);
