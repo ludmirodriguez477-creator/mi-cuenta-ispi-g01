@@ -36,7 +36,7 @@ async function fetchConReintento(url, opciones) {
 
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_PUBLISHABLE_KEY) {
   throw new Error(
-    'Faltan SUPABASE_URL o SUPABASE_PUBLISHABLE_KEY en el archivo .env'
+    'Faltan SUPABASE_URL o SUPABASE_PUBLISHABLE_KEY en las variables de entorno'
   );
 }
 
@@ -103,9 +103,8 @@ app.get('/api/cuenta/:dni', async (req, res) => {
     });
   }
 });
-// ... (todo tu código anterior se queda igual hasta aquí)
 
-// ✅ EXPORTAR la app para que Vercel pueda usarla
+// ✅ EXPORTAR la app para que Vercel pueda usarla (OBLIGATORIO)
 module.exports = app;
 
 // ✅ Solo iniciar el servidor localmente si NO estamos en Vercel (producción)
