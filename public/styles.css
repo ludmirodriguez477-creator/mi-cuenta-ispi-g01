@@ -914,10 +914,10 @@ body.logged #nav {
   .profile-card {
     padding: 15px;
   }
-}/* Barra superior: solo notificaciones */
+}/* Barra superior: menú a la izquierda y notificaciones a la derecha */
 .top {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   padding: 10px 0;
   min-height: 45px;
