@@ -276,10 +276,12 @@ function descargarConstancia(cuota) {
   ventana.document.open();
   ventana.document.write(contenido);
   ventana.document.close();
-  ventana.onload = () => {
-    ventana.focus();
-    ventana.print();
-  };
+  setTimeout(() => {
+    if (!ventana.closed) {
+      ventana.focus();
+      ventana.print();
+    }
+  }, 300);
 }
 
 function cargarDatos(datos) {
@@ -318,9 +320,52 @@ function cargarDatos(datos) {
   renderizarCuotas(datos);
 }
 
+const menu = $('#nav');
+const menuBackdrop = $('#menuBackdrop');
+const menuTriggers = $$('.menu-trigger');
+const menuClose = $('.menu-close');
+
+function cerrarMenu() {
+  document.body.classList.remove('menu-open');
+  menu?.setAttribute('aria-hidden', 'true');
+  menuTriggers.forEach((boton) => boton.setAttribute('aria-expanded', 'false'));
+}
+
+function abrirMenu() {
+  document.body.classList.add('menu-open');
+  menu?.setAttribute('aria-hidden', 'false');
+  menuTriggers.forEach((boton) => boton.setAttribute('aria-expanded', 'true'));
+  menuClose?.focus();
+}
+
+menuTriggers.forEach((boton) => boton.addEventListener('click', abrirMenu));
+menuClose?.addEventListener('click', cerrarMenu);
+menuBackdrop?.addEventListener('click', cerrarMenu);
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') cerrarMenu();
+});
+
+const temaOscuroGuardado = localStorage.getItem('mi-cuenta-tema') === 'oscuro';
+const themeToggle = $('#themeToggle');
+function aplicarTemaOscuro(activo) {
+  document.body.classList.toggle('dark', activo);
+  if (themeToggle) {
+    themeToggle.setAttribute('aria-pressed', String(activo));
+    themeToggle.innerHTML = activo
+      ? '<span aria-hidden="true">☀</span><span>Usar tema claro</span>'
+      : '<span aria-hidden="true">☾</span><span>Activar tema oscuro</span>';
+  }
+  localStorage.setItem('mi-cuenta-tema', activo ? 'oscuro' : 'claro');
+}
+aplicarTemaOscuro(temaOscuroGuardado);
+themeToggle?.addEventListener('click', () => {
+  aplicarTemaOscuro(!document.body.classList.contains('dark'));
+});
+
 $$('#nav .tab').forEach((boton) => {
   boton.addEventListener('click', () => {
     setTab(boton.dataset.tab);
+    cerrarMenu();
   });
 });
 
