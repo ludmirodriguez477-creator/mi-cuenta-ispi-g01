@@ -440,6 +440,9 @@ if (loginForm) {
 }
 
 function salir() {
+  const confirmar = window.confirm('¿Querés cerrar la sesión?');
+  if (!confirmar) return;
+
   document.body.classList.remove('logged');
   datosCuenta = null;
 
