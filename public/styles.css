@@ -1120,3 +1120,11 @@ body.dark .tab:hover { color: #c6d8ff; }
 /* Alinear menú y botón para volver dentro de las pantallas internas. */
 .top-actions { display: flex; align-items: center; gap: 8px; }
 .back-trigger { font-size: 22px; }
+
+/* Mejor legibilidad del nombre institucional en la cabecera móvil */
+.small-box { font-size: 18px; padding: 4px 10px; }
+.small-sub { font-size: 9.5px; letter-spacing: 2.5px; }
+@media (max-width: 350px) {
+  .small-box { font-size: 16px; padding: 3px 8px; }
+  .small-sub { font-size: 8px; letter-spacing: 2px; }
+}
