@@ -1115,3 +1115,8 @@ body.dark .tab:hover { color: #c6d8ff; }
 .grid .stat small { grid-column: 2; grid-row: 1; min-height: 0; align-self: end; }
 .grid .stat b { grid-column: 2; grid-row: 2; align-self: start; margin: 2px 0 0; }
 .grid .stat .link { grid-column: 3; grid-row: 1 / 3; justify-self: end; margin: 0; white-space: nowrap; }
+
+
+/* Alinear menú y botón para volver dentro de las pantallas internas. */
+.top-actions { display: flex; align-items: center; gap: 8px; }
+.back-trigger { font-size: 22px; }

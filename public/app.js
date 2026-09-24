@@ -3,6 +3,7 @@ const $$ = (selector) => document.querySelectorAll(selector);
 
 let datosCuenta = null;
 let toastTimer;
+let historialPantallas = [];
 
 const tabs = {
   login: '#s-login',
@@ -130,15 +131,26 @@ function mostrarPantalla(selector) {
   window.scrollTo(0, 0);
 }
 
-function setTab(tabName) {
+function setTab(tabName, guardarEnHistorial = true) {
   const selector = tabs[tabName];
   if (!selector) return;
+
+  const actual = Object.entries(tabs)
+    .find(([, pantalla]) => $(pantalla)?.classList.contains('active'))?.[0];
+  if (guardarEnHistorial && actual && actual !== tabName) {
+    historialPantallas.push(actual);
+  }
 
   mostrarPantalla(selector);
 
   $$('#nav .tab').forEach((boton) => {
     boton.classList.toggle('active', boton.dataset.tab === tabName);
   });
+}
+
+function volverAtras() {
+  const anterior = historialPantallas.pop() || 'inicio';
+  setTab(anterior, false);
 }
 
 function formatoMonto(monto) {
@@ -339,6 +351,7 @@ function abrirMenu() {
 }
 
 menuTriggers.forEach((boton) => boton.addEventListener('click', abrirMenu));
+$$('.back-trigger').forEach((boton) => boton.addEventListener('click', volverAtras));
 menuClose?.addEventListener('click', cerrarMenu);
 menuBackdrop?.addEventListener('click', cerrarMenu);
 document.addEventListener('keydown', (event) => {
