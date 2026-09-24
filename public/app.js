@@ -358,6 +358,7 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') cerrarMenu();
 });
 
+const CLAVE_SESION_RECORDADA = 'mi-cuenta-dni-recordado';
 const temaOscuroGuardado = localStorage.getItem('mi-cuenta-tema') === 'oscuro';
 const themeToggle = $('#themeToggle');
 function aplicarTemaOscuro(activo) {
@@ -445,7 +446,13 @@ if (loginForm) {
         return;
       }
 
-      // ✅ CORRECCIÓN PRINCIPAL: Procesamos los datos para calcular los totales
+      const mantenerSesion = $('#rememberSession')?.checked === true;
+      if (mantenerSesion) {
+        localStorage.setItem(CLAVE_SESION_RECORDADA, dni);
+      } else {
+        localStorage.removeItem(CLAVE_SESION_RECORDADA);
+      }
+
       const datosProcesados = procesarDatosCuenta(respuestaCuenta.alumno, respuestaCuenta.cuotas);
       
       datosCuenta = datosProcesados;
@@ -464,7 +471,40 @@ if (loginForm) {
   });
 }
 
+async function restaurarSesionRecordada() {
+  const dniGuardado = localStorage.getItem(CLAVE_SESION_RECORDADA) || '';
+  const casilla = $('#rememberSession');
+  if (!dniGuardado) return;
+  if (!/^\d{7,8}$/.test(dniGuardado)) {
+    localStorage.removeItem(CLAVE_SESION_RECORDADA);
+    return;
+  }
+
+  if ($('#user')) $('#user').value = dniGuardado;
+  if (casilla) casilla.checked = true;
+
+  try {
+    const respuesta = await consultarCuentaEnSupabase(dniGuardado);
+    if (!respuesta.alumno) {
+      localStorage.removeItem(CLAVE_SESION_RECORDADA);
+      if (casilla) casilla.checked = false;
+      return;
+    }
+    datosCuenta = procesarDatosCuenta(respuesta.alumno, respuesta.cuotas);
+    cargarDatos(datosCuenta);
+    document.body.classList.add('logged');
+    setTab('inicio', false);
+    toast(`¡Bienvenido/a, ${datosCuenta.nombre || 'usuario'}! 👋`);
+  } catch (error) {
+    console.warn('No se pudo restaurar la sesión guardada.', error);
+  }
+}
+
+restaurarSesionRecordada();
+
 function salir() {
+  localStorage.removeItem(CLAVE_SESION_RECORDADA);
+  if ($('#rememberSession')) $('#rememberSession').checked = false;
   if (logoutConfirm) logoutConfirm.hidden = true;
   document.body.classList.remove('logged');
   datosCuenta = null;
