@@ -374,6 +374,7 @@ aplicarTemaOscuro(temaOscuroGuardado);
 themeToggle?.addEventListener('click', () => {
   aplicarTemaOscuro(!document.body.classList.contains('dark'));
 });
+$('#logoutButton')?.addEventListener('click', salir);
 
 $$('#nav .tab').forEach((boton) => {
   boton.addEventListener('click', () => {
@@ -445,6 +446,8 @@ function salir() {
   if ($('#user')) $('#user').value = '';
   if ($('#mensaje')) $('#mensaje').textContent = '';
 
-  setTab('login');
+  historialPantallas = [];
+  setTab('login', false);
+  cerrarMenu();
   toast('Sesión cerrada correctamente');
 }
