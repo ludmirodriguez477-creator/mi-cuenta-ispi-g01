@@ -39,12 +39,22 @@ async function consultarCuentaEnSupabase(dni) {
     return { alumno: null, cuotas: [] };
   }
 
-  const cuotasRespuesta = await fetch(
-    `${SUPABASE_URL}/rest/v1/cuotas?select=id,alumno_id,concepto,vencimiento,importe,pagado&alumno_id=eq.${encodeURIComponent(alumno.id)}&order=vencimiento.asc`,
+  const filtroCuotas = `&alumno_id=eq.${encodeURIComponent(alumno.id)}&order=vencimiento.asc`;
+  let cuotasRespuesta = await fetch(
+    `${SUPABASE_URL}/rest/v1/cuotas?select=id,alumno_id,concepto,vencimiento,importe,pagado,fecha_pago${filtroCuotas}`,
     { headers }
   );
+  let cuotas = await cuotasRespuesta.json();
 
-  const cuotas = await cuotasRespuesta.json();
+  // Si todavía no existe fecha_pago en la tabla, conservamos compatibilidad
+  // con el esquema actual y seguimos mostrando cuotas y vencimientos.
+  if (!cuotasRespuesta.ok && /fecha_pago|column/i.test(cuotas.message || '')) {
+    cuotasRespuesta = await fetch(
+      `${SUPABASE_URL}/rest/v1/cuotas?select=id,alumno_id,concepto,vencimiento,importe,pagado${filtroCuotas}`,
+      { headers }
+    );
+    cuotas = await cuotasRespuesta.json();
+  }
 
   if (!cuotasRespuesta.ok) {
     throw new Error(cuotas.message || 'No se pudieron consultar las cuotas.');
@@ -135,6 +145,143 @@ function formatoMonto(monto) {
   return `$ ${Number(monto || 0).toLocaleString('es-AR')}`;
 }
 
+function formatoFecha(fecha) {
+  if (!fecha) return '';
+  const valor = String(fecha);
+  const iso = valor.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+  const parsed = new Date(valor);
+  return Number.isNaN(parsed.getTime()) ? valor : parsed.toLocaleDateString('es-AR');
+}
+
+function escaparHtml(valor) {
+  return String(valor ?? '').replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[c]);
+}
+
+function crearFilaCuota(cuota, tipo = 'estado') {
+  const fila = document.createElement('article');
+  fila.className = 'cuota';
+  const info = document.createElement('div');
+  info.className = 'cuota-info';
+  const concepto = document.createElement('b');
+  concepto.textContent = cuota.concepto || 'Cuota';
+  const vencimiento = document.createElement('small');
+  vencimiento.textContent = `Vencimiento: ${formatoFecha(cuota.vencimiento) || 'Sin fecha'}`;
+  info.append(concepto, vencimiento);
+
+  if (cuota.pagado === true) {
+    const fechaPago = document.createElement('small');
+    fechaPago.className = 'fecha-pago';
+    fechaPago.textContent = cuota.fecha_pago
+      ? `Pagada el ${formatoFecha(cuota.fecha_pago)}`
+      : 'Pago registrado; fecha no informada';
+    info.append(fechaPago);
+  }
+
+  const lado = document.createElement('div');
+  lado.className = 'cuota-lado';
+  const importe = document.createElement('span');
+  importe.className = 'cuota-importe';
+  importe.textContent = formatoMonto(cuota.importe);
+  lado.append(importe);
+  const estado = document.createElement('span');
+  estado.className = `estado-cuota ${cuota.pagado ? 'estado-pagada' : 'estado-pendiente'}`;
+  estado.textContent = cuota.pagado ? 'Pagada' : 'Pendiente';
+  lado.append(estado);
+
+  if (cuota.pagado === true && (tipo === 'historial' || tipo === 'estado')) {
+    const boton = document.createElement('button');
+    boton.type = 'button';
+    boton.className = 'comprobante-btn';
+    boton.textContent = 'Imprimir / guardar PDF';
+    boton.addEventListener('click', () => descargarConstancia(cuota));
+    lado.append(boton);
+  }
+  fila.append(info, lado);
+  return fila;
+}
+
+function mostrarVacio(contenedor, mensaje) {
+  const texto = document.createElement('p');
+  texto.className = 'empty';
+  texto.textContent = mensaje;
+  contenedor.replaceChildren(texto);
+}
+
+function renderizarCuotas(datos) {
+  const cuotas = Array.isArray(datos.cuotas) ? datos.cuotas : [];
+  const pagadas = cuotas.filter((cuota) => cuota.pagado === true);
+  const pendientes = cuotas.filter((cuota) => cuota.pagado !== true);
+  [
+    ['#listaCuotas', cuotas, 'No hay cuotas cargadas.', 'estado'],
+    ['#listaPagos', pendientes, 'No hay cuotas pendientes.', 'pagos'],
+    ['#historialPagos', pagadas, 'Todavía no hay pagos registrados.', 'historial']
+  ].forEach(([selector, lista, vacio, tipo]) => {
+    const contenedor = $(selector);
+    if (!contenedor) return;
+    if (!lista.length) return mostrarVacio(contenedor, vacio);
+    contenedor.replaceChildren(...lista.map((cuota) => crearFilaCuota(cuota, tipo)));
+  });
+
+  const recientes = [...cuotas]
+    .sort((a, b) => String(b.fecha_pago || b.vencimiento || '').localeCompare(String(a.fecha_pago || a.vencimiento || '')))
+    .slice(0, 3);
+  const movimientos = $('#movimientosInicio');
+  if (!movimientos) return;
+  if (!recientes.length) return mostrarVacio(movimientos, 'No hay movimientos para mostrar.');
+  movimientos.replaceChildren(...recientes.map((cuota) => {
+    const fila = document.createElement('div');
+    fila.className = 'mov';
+    const icono = document.createElement('span');
+    icono.className = 'mic';
+    icono.textContent = cuota.pagado ? '✓' : '📅';
+    const detalle = document.createElement('div');
+    const nombre = document.createElement('b');
+    nombre.textContent = cuota.concepto || 'Cuota';
+    const fecha = document.createElement('small');
+    const fechaMostrar = cuota.pagado ? cuota.fecha_pago : cuota.vencimiento;
+    fecha.textContent = `${cuota.pagado ? 'Pago' : 'Vence'}: ${formatoFecha(fechaMostrar) || (cuota.pagado ? 'Fecha no informada' : 'Sin fecha')}`;
+    detalle.append(nombre, document.createElement('br'), fecha);
+    const monto = document.createElement('span');
+    monto.className = 'amt';
+    monto.textContent = formatoMonto(cuota.importe);
+    fila.append(icono, detalle, monto);
+    return fila;
+  }));
+}
+
+function descargarConstancia(cuota) {
+  if (!datosCuenta || cuota.pagado !== true) {
+    toast('Solo se generan constancias de pagos registrados.');
+    return;
+  }
+  const nombre = [datosCuenta.nombre, datosCuenta.apellido].filter(Boolean).join(' ') || 'Estudiante';
+  const fechaPago = cuota.fecha_pago ? formatoFecha(cuota.fecha_pago) : 'No informada en el sistema';
+  const contenido = `<!doctype html><html lang="es"><meta charset="utf-8"><title>Constancia de pago</title>
+  <style>body{font:16px Arial,sans-serif;color:#202637;max-width:720px;margin:48px auto;padding:24px}header{border-bottom:4px solid #0b57c2;padding-bottom:16px}h1{color:#142b7c}dt{font-weight:bold;margin-top:18px}dd{margin:5px 0}.nota{margin-top:32px;padding:14px;background:#f4f6f9;border-radius:8px;font-size:13px}.pie{margin-top:44px;color:#6b7280;font-size:12px}</style>
+  <header><strong>ISPI 4019 · SAN JUAN BAUTISTA</strong><h1>Constancia informativa de pago</h1></header>
+  <p>El sistema registra como pagada la cuota indicada:</p><dl>
+  <dt>Estudiante</dt><dd>${escaparHtml(nombre)}</dd><dt>DNI</dt><dd>${escaparHtml(datosCuenta.dni || 'No disponible')}</dd>
+  <dt>Concepto</dt><dd>${escaparHtml(cuota.concepto || 'Cuota')}</dd><dt>Importe</dt><dd>${escaparHtml(formatoMonto(cuota.importe))}</dd>
+  <dt>Fecha de pago registrada</dt><dd>${escaparHtml(fechaPago)}</dd><dt>Vencimiento</dt><dd>${escaparHtml(formatoFecha(cuota.vencimiento) || 'No informado')}</dd></dl>
+  <p class="nota">Documento informativo generado a partir del estado registrado en el sistema. No reemplaza un recibo oficial emitido por la institución.</p>
+  <p class="pie">Generado el ${escaparHtml(new Date().toLocaleString('es-AR'))}</p></html>`;
+  const ventana = window.open('', '_blank');
+  if (!ventana) {
+    toast('Permití las ventanas emergentes para imprimir o guardar el comprobante.');
+    return;
+  }
+  ventana.document.open();
+  ventana.document.write(contenido);
+  ventana.document.close();
+  ventana.onload = () => {
+    ventana.focus();
+    ventana.print();
+  };
+}
+
 function cargarDatos(datos) {
   const nombreCompleto = [
     datos.nombre || '',
@@ -168,6 +315,7 @@ function cargarDatos(datos) {
   if ($('#cantidadPagos')) $('#cantidadPagos').textContent = datos.pagosRealizados || 0;
   if ($('#cantidadPendientes')) $('#cantidadPendientes').textContent = datos.cuotasPendientes || 0;
   if ($('#proximoVencimiento')) $('#proximoVencimiento').textContent = datos.proximoVencimiento || '-';
+  renderizarCuotas(datos);
 }
 
 $$('#nav .tab').forEach((boton) => {

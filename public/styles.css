@@ -934,3 +934,69 @@ body.logged #nav {
   min-height: auto;
   margin: 0;
 }
+
+
+/* Mejoras para el resumen principal y las listas de cuotas */
+.grid .stat {
+  position: relative;
+  overflow: hidden;
+  min-height: 166px;
+  padding: 16px 12px 13px;
+  border-radius: 18px;
+  border-top-width: 0;
+  text-align: left;
+}
+
+.grid .stat::after {
+  content: "";
+  position: absolute;
+  width: 92px;
+  height: 92px;
+  right: -34px;
+  top: -36px;
+  border-radius: 50%;
+  opacity: .55;
+  pointer-events: none;
+}
+
+.grid .stat.blue { background: linear-gradient(145deg, #fff 48%, #eef4ff); border-left: 4px solid var(--azul); }
+.grid .stat.green { background: linear-gradient(145deg, #fff 48%, #f0f8eb); border-left: 4px solid var(--verde); }
+.grid .stat.orange { background: linear-gradient(145deg, #fff 48%, #fff3ed); border-left: 4px solid var(--naranja); }
+.grid .stat.red { background: linear-gradient(145deg, #fff 48%, #fff0ef); border-left: 4px solid var(--rojo); }
+.grid .stat.blue::after { background: #d8e7ff; }
+.grid .stat.green::after { background: #dff0d3; }
+.grid .stat.orange::after { background: #ffe0d0; }
+.grid .stat.red::after { background: #ffd9d6; }
+
+.grid .stat .ic {
+  position: relative;
+  z-index: 1;
+  width: 38px;
+  height: 38px;
+  margin: 0 0 13px;
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 800;
+  box-shadow: 0 5px 12px rgba(20, 43, 124, .12);
+}
+
+.grid .stat small { display: block; min-height: 30px; line-height: 1.3; }
+.grid .stat b { position: relative; z-index: 1; margin: 3px 0 10px; font-size: 21px; letter-spacing: -.35px; }
+.grid .stat .link { position: relative; z-index: 1; display: inline-flex; gap: 4px; align-items: center; padding: 5px 9px; margin-left: -9px; border-radius: 9px; background: rgba(255,255,255,.76); font-size: 12px; }
+.grid .stat .link:hover { background: white; text-decoration: none; }
+
+.cuota { align-items: flex-start; }
+.cuota-info { min-width: 0; }
+.cuota-info small { display: block; margin-top: 4px; line-height: 1.4; }
+.cuota-info .fecha-pago { color: #247343; }
+.cuota-lado { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; text-align: right; }
+.estado-cuota { padding: 4px 9px; border-radius: 999px; font-size: 11px; font-weight: 750; white-space: nowrap; }
+.estado-pagada { color: #237044; background: #e8f6ed; }
+.estado-pendiente { color: #a94b16; background: #fff1e7; }
+.comprobante-btn { border: 1px solid #cbdcf7; background: #f4f8ff; color: var(--azul); border-radius: 9px; padding: 7px 9px; font-size: 11px; font-weight: 700; cursor: pointer; }
+.comprobante-btn:hover { background: #eaf2ff; }
+
+@media (max-width: 350px) {
+  .grid .stat { min-height: 155px; padding: 13px 10px; }
+  .grid .stat b { font-size: 19px; }
+}
