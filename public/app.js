@@ -374,7 +374,32 @@ aplicarTemaOscuro(temaOscuroGuardado);
 themeToggle?.addEventListener('click', () => {
   aplicarTemaOscuro(!document.body.classList.contains('dark'));
 });
-$('#logoutButton')?.addEventListener('click', salir);
+const logoutConfirm = $('#logoutConfirm');
+const cancelLogout = $('#cancelLogout');
+const confirmLogout = $('#confirmLogout');
+
+function pedirConfirmacionCerrarSesion() {
+  if (!logoutConfirm) return;
+  logoutConfirm.hidden = false;
+  cancelLogout?.focus();
+}
+
+function cancelarConfirmacionCerrarSesion() {
+  if (logoutConfirm) logoutConfirm.hidden = true;
+  $('#logoutButton')?.focus();
+}
+
+$('#logoutButton')?.addEventListener('click', pedirConfirmacionCerrarSesion);
+cancelLogout?.addEventListener('click', cancelarConfirmacionCerrarSesion);
+confirmLogout?.addEventListener('click', salir);
+logoutConfirm?.addEventListener('click', (event) => {
+  if (event.target === logoutConfirm) cancelarConfirmacionCerrarSesion();
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && logoutConfirm && !logoutConfirm.hidden) {
+    cancelarConfirmacionCerrarSesion();
+  }
+});
 
 $$('#nav .tab').forEach((boton) => {
   boton.addEventListener('click', () => {
@@ -440,9 +465,7 @@ if (loginForm) {
 }
 
 function salir() {
-  const confirmar = window.confirm('¿Querés cerrar la sesión?');
-  if (!confirmar) return;
-
+  if (logoutConfirm) logoutConfirm.hidden = true;
   document.body.classList.remove('logged');
   datosCuenta = null;
 
